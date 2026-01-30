@@ -7,13 +7,12 @@
 
 <style>
 :root {
-  --bg: #fff1f5;
-  --card: #ffffff;
   --primary: #ec4899;
-  --secondary: #f9a8d4;
   --accent: #f472b6;
-  --text: #4a044e;
-  --muted: #9d174d;
+  --bg-dark: #08000a;
+  --header-dark: #120014;
+  --text-dark: #fce7f3;
+  --card: rgba(255,255,255,0.92);
   --border: #fbcfe8;
 }
 
@@ -24,33 +23,43 @@
 
 body {
   margin: 0;
-  background: linear-gradient(180deg, #fff1f5, #fdf2f8);
-  color: var(--text);
+  background: radial-gradient(circle at top, #2a002f, #120014 60%, #08000a);
+  color: var(--text-dark);
+}
+
+/* ===== BACKGROUND CANVAS (MOUSE TRAIL) ===== */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* HEADER */
 header {
-  position: sticky;
-  top: 0;
-  background: rgba(255,255,255,.9);
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid var(--border);
+  position: relative;
+  height: 180px;
+  background: linear-gradient(180deg, #120014, #08000a);
+  overflow: hidden;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  z-index: 10;
+  justify-content: space-between;
+  padding: 20px;
+  z-index: 2;
 }
 
 header h1 {
-  font-size: 1.1rem;
+  position: relative;
+  z-index: 3;
   margin: 0;
+  font-size: 1.2rem;
 }
 
-.hamburger {
-  font-size: 1.6rem;
-  cursor: pointer;
-  display: none;
+/* HEADER CANVAS */
+#header-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 /* NAV */
@@ -60,73 +69,49 @@ nav {
   top: 0;
   height: 100%;
   width: 260px;
-  background: var(--card);
+  background: rgba(20,0,25,0.95);
   padding: 24px;
-  border-left: 1px solid var(--border);
   transition: right .3s ease;
+  z-index: 20;
 }
 
-nav.active {
-  right: 0;
-}
+nav.active { right: 0; }
 
 nav a {
   display: block;
   margin-bottom: 16px;
   text-decoration: none;
-  color: var(--text);
-  font-weight: 500;
+  color: #fce7f3;
+}
+
+/* HAMBURGER */
+.hamburger {
+  font-size: 1.6rem;
+  cursor: pointer;
+  z-index: 3;
 }
 
 /* MAIN */
 main {
+  position: relative;
+  z-index: 2;
   max-width: 1100px;
   margin: auto;
-  padding: 32px 20px;
+  padding: 40px 20px;
   display: grid;
-  grid-template-columns: 1fr;
   gap: 32px;
 }
 
 .section {
   background: var(--card);
   border-radius: 24px;
-  border: 1px solid var(--border);
   padding: 32px;
+  color: #4a044e;
+  box-shadow: 0 20px 40px rgba(236,72,153,0.15);
 }
 
-.section h2 {
-  margin-top: 0;
-  color: var(--primary);
-}
+.section h2 { color: #ec4899; }
 
-.section p {
-  color: var(--muted);
-}
-
-textarea {
-  width: 100%;
-  min-height: 100px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  padding: 14px;
-  margin-top: 16px;
-  background: #fff;
-  color: var(--text);
-}
-
-button {
-  background: var(--primary);
-  border: none;
-  border-radius: 999px;
-  padding: 14px 24px;
-  color: white;
-  font-weight: 600;
-  margin-top: 20px;
-  cursor: pointer;
-}
-
-/* GALERIA */
 .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
@@ -137,8 +122,27 @@ button {
 .gallery img {
   width: 100%;
   border-radius: 16px;
-  object-fit: cover;
   aspect-ratio: 1/1;
+  object-fit: cover;
+}
+
+textarea {
+  width: 100%;
+  min-height: 100px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-top: 16px;
+}
+
+button {
+  background: var(--primary);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 24px;
+  color: white;
+  margin-top: 20px;
+  cursor: pointer;
 }
 
 /* DESKTOP */
@@ -148,24 +152,21 @@ button {
     position: static;
     height: auto;
     width: auto;
-    border: none;
+    background: none;
     display: flex;
     gap: 24px;
-    background: none;
     padding: 0;
   }
-}
-
-/* MOBILE */
-@media (max-width: 767px) {
-  .hamburger { display: block; }
 }
 </style>
 </head>
 
 <body>
 
+<canvas id="bg-canvas"></canvas>
+
 <header>
+  <canvas id="header-canvas"></canvas>
   <h1>Workbook Interior</h1>
   <div class="hamburger" onclick="toggleMenu()">☰</div>
   <nav id="nav"></nav>
@@ -174,7 +175,7 @@ button {
 <main id="app"></main>
 
 <script>
-/* DATA CENTRAL */
+/* ===== DATA ===== */
 const data = {
   menu: [
     {id:"intro", label:"Bienvenida"},
@@ -184,94 +185,149 @@ const data = {
     {id:"cierre", label:"Cierre"}
   ],
   sections: [
-    {
-      id:"intro",
-      title:"Bienvenida",
-      text:"Este workbook es un espacio seguro de exploración interior a través del arte y el lenguaje consciente."
-    },
+    { id:"intro", title:"Bienvenida", text:"Este workbook es un espacio seguro de exploración interior." },
     {
       id:"mandalas",
       title:"Mandalas",
-      text:"Elegí un mandala y escribí la intención que querés trabajar.",
-      gallery: [
+      text:"Elegí un mandala y escribí tu intención.",
+      gallery:[
         "https://images.unsplash.com/photo-1605000797499-95a51c5269ae",
         "https://images.unsplash.com/photo-1615485290382-441e4d049cb5",
         "https://images.unsplash.com/photo-1526318472351-bc6c2f77c3b3"
       ],
-      textarea:"¿Qué intención querés trabajar hoy?"
+      textarea:"¿Qué intención querés trabajar?"
     },
-    {
-      id:"lenguaje",
-      title:"Lenguaje Interno",
-      text:"Observá cómo te hablás cuando pensás en esta situación.",
-      textarea:"Escribí la frase interna que aparece..."
-    },
-    {
-      id:"reencuadre",
-      title:"Reencuadre (PNL)",
-      text:"Transformá esa frase en una versión que te acompañe.",
-      textarea:"Reescribila de forma más amorosa o útil..."
-    },
-    {
-      id:"cierre",
-      title:"Cierre",
-      text:"Registrá lo que te llevás de esta experiencia.",
-      textarea:"Reflexión final..."
-    }
+    { id:"lenguaje", title:"Lenguaje Interno", text:"Observá tu diálogo interno.", textarea:"Escribí lo que aparece..." },
+    { id:"reencuadre", title:"Reencuadre", text:"Transformá esa frase.", textarea:"Nueva versión..." },
+    { id:"cierre", title:"Cierre", text:"Reflexión final.", textarea:"¿Qué te llevás?" }
   ]
 };
 
-/* RENDER MENU */
+/* MENU */
 const nav = document.getElementById("nav");
-data.menu.forEach(item => {
-  const a = document.createElement("a");
-  a.href = "#" + item.id;
-  a.innerText = item.label;
+data.menu.forEach(m=>{
+  const a=document.createElement("a");
+  a.href="#"+m.id;
+  a.textContent=m.label;
   nav.appendChild(a);
 });
 
-/* RENDER CONTENT */
-const app = document.getElementById("app");
+function toggleMenu(){ nav.classList.toggle("active"); }
 
-data.sections.forEach(sec => {
-  const section = document.createElement("section");
-  section.className = "section";
-  section.id = sec.id;
-
-  section.innerHTML = `
-    <h2>${sec.title}</h2>
-    <p>${sec.text}</p>
-  `;
-
-  if (sec.gallery) {
-    const gallery = document.createElement("div");
-    gallery.className = "gallery";
-    sec.gallery.forEach(img => {
-      const image = document.createElement("img");
-      image.src = img;
-      gallery.appendChild(image);
+/* CONTENT */
+const app=document.getElementById("app");
+data.sections.forEach(sec=>{
+  const s=document.createElement("section");
+  s.className="section";
+  s.id=sec.id;
+  s.innerHTML=`<h2>${sec.title}</h2><p>${sec.text}</p>`;
+  if(sec.gallery){
+    const g=document.createElement("div");
+    g.className="gallery";
+    sec.gallery.forEach(src=>{
+      const i=document.createElement("img");
+      i.src=src;
+      g.appendChild(i);
     });
-    section.appendChild(gallery);
+    s.appendChild(g);
   }
-
-  if (sec.textarea) {
-    const ta = document.createElement("textarea");
-    ta.placeholder = sec.textarea;
-    section.appendChild(ta);
+  if(sec.textarea){
+    const t=document.createElement("textarea");
+    t.placeholder=sec.textarea;
+    s.appendChild(t);
   }
-
-  if (sec.id === "cierre") {
-    const btn = document.createElement("button");
-    btn.innerText = "Guardar experiencia";
-    section.appendChild(btn);
-  }
-
-  app.appendChild(section);
+  app.appendChild(s);
 });
 
-/* MENU TOGGLE */
-function toggleMenu() {
-  nav.classList.toggle("active");
+/* ===== COLORS ===== */
+const colors=["#ec4899","#f472b6","#c026d3","#a855f7","#fb7185"];
+
+/* ===== HEADER PARTICLES ===== */
+const hCanvas=document.getElementById("header-canvas");
+const hCtx=hCanvas.getContext("2d");
+const header=document.querySelector("header");
+
+function resizeHeader(){
+  hCanvas.width=header.offsetWidth;
+  hCanvas.height=header.offsetHeight;
+}
+window.addEventListener("resize",resizeHeader);
+resizeHeader();
+
+const hParticles=[];
+for(let i=0;i<70;i++){
+  hParticles.push({
+    x:Math.random()*hCanvas.width,
+    y:Math.random()*hCanvas.height,
+    vx:(Math.random()-.5),
+    vy:(Math.random()-.5),
+    r:Math.random()*2+1,
+    color:colors[Math.floor(Math.random()*colors.length)]
+  });
+}
+
+function animateHeader(){
+  hCtx.fillStyle="rgba(8,0,10,0.25)";
+  hCtx.fillRect(0,0,hCanvas.width,hCanvas.height);
+  hParticles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>hCanvas.width) p.vx*=-1;
+    if(p.y<0||p.y>hCanvas.height) p.vy*=-1;
+    hCtx.beginPath();
+    hCtx.shadowBlur=20;
+    hCtx.shadowColor=p.color;
+    hCtx.fillStyle=p.color;
+    hCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    hCtx.fill();
+  });
+  requestAnimationFrame(animateHeader);
+}
+animateHeader();
+
+/* ===== BACKGROUND MOUSE TRAIL ===== */
+const bgCanvas=document.getElementById("bg-canvas");
+const bCtx=bgCanvas.getContext("2d");
+
+function resizeBg(){
+  bgCanvas.width=innerWidth;
+  bgCanvas.height=innerHeight;
+}
+window.addEventListener("resize",resizeBg);
+resizeBg();
+
+const trail=[];
+document.addEventListener("mousemove",e=>{
+  trail.push({
+    x:e.clientX,
+    y:e.clientY,
+    r:Math.random()*3+2,
+    a:1,
+    dx:(Math.random()-.5)*.3,
+    dy:(Math.random()-.5)*.3,
+    c:colors[Math.floor(Math.random()*colors.length)]
+  });
+});
+
+function animateBg(){
+  bCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+  for(let i=trail.length-1;i>=0;i--){
+    const t=trail[i];
+    t.x+=t.dx; t.y+=t.dy; t.a-=.03;
+    bCtx.beginPath();
+    bCtx.shadowBlur=30;
+    bCtx.shadowColor=t.c;
+    bCtx.fillStyle=`rgba(${hexToRgb(t.c)},${t.a})`;
+    bCtx.arc(t.x,t.y,t.r,0,Math.PI*2);
+    bCtx.fill();
+    if(t.a<=0) trail.splice(i,1);
+  }
+  requestAnimationFrame(animateBg);
+}
+animateBg();
+
+function hexToRgb(h){
+  const n=parseInt(h.slice(1),16);
+  return `${(n>>16)&255},${(n>>8)&255},${n&255}`;
 }
 </script>
 
