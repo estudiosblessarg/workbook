@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Workbook Interior – Mandalas & PNL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --bg: #fff1f5;
+  --card: #ffffff;
+  --primary: #ec4899;
+  --secondary: #f9a8d4;
+  --accent: #f472b6;
+  --text: #4a044e;
+  --muted: #9d174d;
+  --border: #fbcfe8;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #fff1f5, #fdf2f8);
+  color: var(--text);
+}
+
+/* HEADER */
+header {
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  z-index: 10;
+}
+
+header h1 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.hamburger {
+  font-size: 1.6rem;
+  cursor: pointer;
+  display: none;
+}
+
+/* NAV */
+nav {
+  position: fixed;
+  right: -100%;
+  top: 0;
+  height: 100%;
+  width: 260px;
+  background: var(--card);
+  padding: 24px;
+  border-left: 1px solid var(--border);
+  transition: right .3s ease;
+}
+
+nav.active {
+  right: 0;
+}
+
+nav a {
+  display: block;
+  margin-bottom: 16px;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* MAIN */
+main {
+  max-width: 1100px;
+  margin: auto;
+  padding: 32px 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.section {
+  background: var(--card);
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  padding: 32px;
+}
+
+.section h2 {
+  margin-top: 0;
+  color: var(--primary);
+}
+
+.section p {
+  color: var(--muted);
+}
+
+textarea {
+  width: 100%;
+  min-height: 100px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-top: 16px;
+  background: #fff;
+  color: var(--text);
+}
+
+button {
+  background: var(--primary);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 24px;
+  color: white;
+  font-weight: 600;
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+/* GALERIA */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.gallery img {
+  width: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+  aspect-ratio: 1/1;
+}
+
+/* DESKTOP */
+@media (min-width: 768px) {
+  .hamburger { display: none; }
+  nav {
+    position: static;
+    height: auto;
+    width: auto;
+    border: none;
+    display: flex;
+    gap: 24px;
+    background: none;
+    padding: 0;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 767px) {
+  .hamburger { display: block; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Workbook Interior</h1>
+  <div class="hamburger" onclick="toggleMenu()">☰</div>
+  <nav id="nav"></nav>
+</header>
+
+<main id="app"></main>
+
+<script>
+/* DATA CENTRAL */
+const data = {
+  menu: [
+    {id:"intro", label:"Bienvenida"},
+    {id:"mandalas", label:"Mandalas"},
+    {id:"lenguaje", label:"Lenguaje Interno"},
+    {id:"reencuadre", label:"Reencuadre"},
+    {id:"cierre", label:"Cierre"}
+  ],
+  sections: [
+    {
+      id:"intro",
+      title:"Bienvenida",
+      text:"Este workbook es un espacio seguro de exploración interior a través del arte y el lenguaje consciente."
+    },
+    {
+      id:"mandalas",
+      title:"Mandalas",
+      text:"Elegí un mandala y escribí la intención que querés trabajar.",
+      gallery: [
+        "https://images.unsplash.com/photo-1605000797499-95a51c5269ae",
+        "https://images.unsplash.com/photo-1615485290382-441e4d049cb5",
+        "https://images.unsplash.com/photo-1526318472351-bc6c2f77c3b3"
+      ],
+      textarea:"¿Qué intención querés trabajar hoy?"
+    },
+    {
+      id:"lenguaje",
+      title:"Lenguaje Interno",
+      text:"Observá cómo te hablás cuando pensás en esta situación.",
+      textarea:"Escribí la frase interna que aparece..."
+    },
+    {
+      id:"reencuadre",
+      title:"Reencuadre (PNL)",
+      text:"Transformá esa frase en una versión que te acompañe.",
+      textarea:"Reescribila de forma más amorosa o útil..."
+    },
+    {
+      id:"cierre",
+      title:"Cierre",
+      text:"Registrá lo que te llevás de esta experiencia.",
+      textarea:"Reflexión final..."
+    }
+  ]
+};
+
+/* RENDER MENU */
+const nav = document.getElementById("nav");
+data.menu.forEach(item => {
+  const a = document.createElement("a");
+  a.href = "#" + item.id;
+  a.innerText = item.label;
+  nav.appendChild(a);
+});
+
+/* RENDER CONTENT */
+const app = document.getElementById("app");
+
+data.sections.forEach(sec => {
+  const section = document.createElement("section");
+  section.className = "section";
+  section.id = sec.id;
+
+  section.innerHTML = `
+    <h2>${sec.title}</h2>
+    <p>${sec.text}</p>
+  `;
+
+  if (sec.gallery) {
+    const gallery = document.createElement("div");
+    gallery.className = "gallery";
+    sec.gallery.forEach(img => {
+      const image = document.createElement("img");
+      image.src = img;
+      gallery.appendChild(image);
+    });
+    section.appendChild(gallery);
+  }
+
+  if (sec.textarea) {
+    const ta = document.createElement("textarea");
+    ta.placeholder = sec.textarea;
+    section.appendChild(ta);
+  }
+
+  if (sec.id === "cierre") {
+    const btn = document.createElement("button");
+    btn.innerText = "Guardar experiencia";
+    section.appendChild(btn);
+  }
+
+  app.appendChild(section);
+});
+
+/* MENU TOGGLE */
+function toggleMenu() {
+  nav.classList.toggle("active");
+}
+</script>
+
+</body>
+</html>
